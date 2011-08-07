@@ -1,0 +1,60 @@
+Matlab Fast SOAP - a faster Matlab replacement for the default SOAP functions
+See the end of the file for license conditions.
+
+Written by:
+
+Edo Frederix
+The Johns Hopkins University / Eindhoven University of Technology
+Department of Mechanical Engineering
+edofrederix@jhu.edu, edofrederix@gmail.com
+
+
+---- Summary -----------------------------------------------------------------
+
+Matlab Fast SOAP is a library that replaces the original Matlab SOAP functions
+createSoapMessage(), callSoapService() and parseSoapResponse() with more
+efficient alternatives.
+
+The reason for replacement is straightforward: speed. The native SOAP
+functions make use of a Document Object Model (DOM) approach. This is very
+slow for a large set of elements, as process time scales exponentially with
+the number of elements in the DOM. By using simple string operations, creating
+the SOAP message, as well as parsing the SOAP message, will take less time.
+
+This modification and the gain in speed of course comes with a payoff: the
+flexibility of the DOM approach is completely lost. Therefore, these fast SOAP
+functions are rigid and only useful to people who do not need this
+flexibility. Also, the benefit of a non-DOM approach will only become
+noticeable for very large XML documents with many repetitive elements.
+
+
+---- Credits -----------------------------------------------------------------
+
+All code in this package is written by:
+
+  Edo Frederix
+  The Johns Hopkins University / Eindhoven University of Technology
+  Department of Mechanical Engineering
+  edofrederix@jhu.edu, edofrederix@gmail.com
+
+This package is shipped under the terms of the GNU General Public License
+version 3 or any later version. A copy of the GNU GPL v3 resides in this
+package. A more formal statement can be found at the bottom of this file.
+
+
+---- License -----------------------------------------------------------------
+
+This file is part of Matlab Fast SOAP.
+
+Matlab Fast SOAP is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+Matlab Fast SOAP is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+Turbmat. If not, see <http://www.gnu.org/licenses/>.
