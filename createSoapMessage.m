@@ -31,133 +31,160 @@
 % with Matlab Fast SOAP. If not, see <http://www.gnu.org/licenses/>.
 %
 
-function m = createSoapMessage(tns, methodname, data, types, style)
+function m = createSoapMessage(tns, methodname, data, style)
     
     % No default behavior for first 5 arguments 
-    if nargin < 4
+    if nargin < 3
         error('Provide at least 4 arguments')
     end
     
     % Check message style, default to rpc
-    if nargin > 4 && ~ strcmpi(style, 'document') && ~ strcmpi(style, 'rpc')
+    if nargin > 3 && ~ strcmpi(style, 'document') && ~ strcmpi(style, 'rpc')
         error('Provide a valid XML style (rpc or document is supported)');
-    elseif nargin <= 4
+    elseif nargin <= 3
         style = 'rpc';
     end
     
     % Start the envelope
     m = '<?xml version="1.0" encoding="utf-8"?>';
-    m = sprintf('%s<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"', m);
+    m = merge(m, '<soap:Envelope xmlSteps:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlSteps:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlSteps:xs="http://www.w3.org/2001/XMLSchema" xmlSteps:xsi="http://www.w3.org/2001/XMLSchema-instance"');
     switch style
         case 'document'
-            m = sprintf('%s>', m);
+            m = merge(m, '>');
         case 'rpc'
-            m = sprintf('%s xmlns:n="%s">', m, tns);
+            m = merge(m, sprintf(' xmlSteps:n="%s">', tns));
     end
-    m = sprintf('%s<soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">', m);
+    m = merge(m, '<soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">');
     switch style
         case 'document'
-            m = sprintf('%s<%s xmlns="%s">', m, methodname, tns);
+            m = merge(m, sprintf('%s<%s xmlSteps="%s">', methodname, tns));
         case 'rpc'
-            m = sprintf('%s<n:%s>', m, methodname);
+            m = merge(m, sprintf('%s<n:%s>', methodname));
     end
     
     % Add body
-    m = sprintf('%s%s', m, createXML(data, types));
+    m = merge(m, createXML(data));
     
     % End the envelope
     switch style
         case 'document'
-            m = sprintf('%s</%s>', m, methodname);
+            m = merge(m, sprintf('</%s>', m, methodname));
         case 'rpc'
-            m = sprintf('%s</n:%s>', m, methodname);
+            m = merge(m, sprintf('%s</n:%s>', methodname));
     end
-    m = sprintf('%s</soap:Body></soap:Envelope>', m);
+    m = merge(m, '</soap:Body></soap:Envelope>');
 end
 
 %==========================================================================
-function xml = createXML(values, types)
+function xml = createXML(data)
 
     xml = '';
-    par = '';
-    [wrap, parallel, keys] = checkKeys(values);
-    for i = 1:numel(keys)
+    
+    for n=1:numel(data)
         
-        key = keys{i};
-        value = values.(key);
-        type = types.(key);
+        xmlStep = '';
+        xmlParallel = '';
         
-        % Construct this element
-        switch class(value)
+        [val, valClass, name, type, wrap, parallel] = checkData(data(n));
+        switch valClass
             case 'struct'
-                xml = [xml wrapXML(key, '', createXML(value, type))]; %#ok<*AGROW>
-                
+                keys = fieldnames(val);
+                for j=1:numel(keys)
+                    key = keys{j};
+                    xmlSub = createXML(val.(key));
+
+                    if ~parallel || (size(xmlParallel,1) > 0 && size(xmlParallel, 1) ~= size(xmlSub, 1))
+                        xmlSub = wrapXML(wrap, '', xmlSub);
+                        xmlStep = merge(xmlStep, xmlSub);
+                    else
+                        xmlParallel = horzcat(xmlParallel, xmlSub);
+                    end
+                end
+
+                if parallel
+                    xmlParallel = wrapXML(wrap, '', xmlParallel);
+                    xmlStep = merge(xmlStep, xmlParallel);
+                end
+
+                xml = merge(xml, wrapXML(name, type, xmlStep));
+
             case 'char'
-                col = wrapXML(key, type, value);
-                
+                xml = [xml wrapXML(name, type, wrapXML(wrap, '', val))];
+
             case 'double'
-                col = wrapXML(key, type, num2str(value(:), '%1.10f'));
-                
+                xml = [xml wrapXML(name, type, wrapXML(wrap, '', num2str(val(:), '%1.10f')))];
+
             case 'cell'
-                for j=1:numel(value)
-                    xml = [xml createXML(struct(key, value{j}), struct(key, type{j}))];
-                end     
-        end
-        
-        if ~isstruct(value)
-            if ~parallel || (size(par,1) > 0 && size(col, 1) ~= size(par, 1))
-                % Just prepend to document
-                xml = [xml reshape(col', 1, numel(col))];
-            else
-                % Store parallel
-                par = horzcat(par, col);
-            end  
+                for i=1:numel(val)
+                    xmlStep = merge(xmlStep, wrapXML(wrap, '', createXML(struct('val', val{i}))));
+                end
+                xml = merge(xml, wrapXML(name, type, xmlStep));
         end
     end
-    
-    % Wrap this layer, if specified
-    if wrap
-        if xml
-            xml = sprintf('<%s>%s</%s>', wrap, xml, wrap);
-        end
-        if par
-            par = wrapXML(wrap, '', par);
-            xml = [xml reshape(par', 1, numel(par))];
-        end
-    elseif par
-        xml = [xml reshape(par', 1, numel(par))];
-    end    
 end
 
 %==========================================================================
-function xml = wrapXML(tag, type, text)
+function str = wrapXML(name, type, str)
 
-    n = size(text,1);
-    xml = horzcat( repmat(sprintf('<%s%s>', tag, checkType(type)), n, 1), ...
-                   text, ...
-                   repmat(sprintf('</%s>', tag), n, 1));
+    if name
+        n = size(str,1);
+        str = horzcat( repmat(sprintf('<%s%s>', name, checkType(type)), n, 1), ...
+                       str, ...
+                       repmat(sprintf('</%s>', name), n, 1));
+    end
 
 end
 
 %==========================================================================
-function [wrap, parallel, keysr] = checkKeys(values)
+function xml = merge(varargin)
 
-    keys = fieldnames(values);
-    wrap = '';
-    parallel = 0;
+    optargin = size(varargin,2);
+    if optargin < 2
+        error('We need at least two arguments');
+    end
     
-    for i = 1:numel(keys)
-        key = keys{i};
-        if strcmp(key, 'parallel')
-            parallel = 1;
-            values = rmfield(values, 'parallel');
-        elseif strcmp(key, 'wrap')
-            wrap = values.wrap;
-            values = rmfield(values, 'wrap');
+    xml = '';
+    for i=1:optargin
+        s = varargin{i};
+        if size(s,1) > 1
+            xml = [xml reshape(varargin{i}', 1, numel(varargin{i}))]; %#ok<*AGROW>
         else
-            keysr{i} = key;
+            xml = [xml s];
         end
-    end             
+    end
+end
+
+%==========================================================================
+function [val, valClass, name, type, wrap, parallel] = checkData(data)
+    
+    %defaults
+    val = ''; valClass = class(val);
+    name = [];
+    type = [];
+    wrap = [];
+    parallel = 0;
+
+    keys = fieldnames(data);
+    for i=1:numel(keys)
+        key = keys{i};
+        switch key
+            case 'val'
+                val = data.val;
+                valClass = class(val);
+                
+            case 'type'
+                type = data.type;
+                
+            case 'name'
+                name = data.name;                
+                
+            case 'wrap'
+                wrap = data.wrap;
+                
+            case 'parallel'
+                parallel = data.parallel;
+        end
+    end
     
 end
 
