@@ -33,7 +33,7 @@
 
 function s = parseSoapResponse(response)
 
-    matches = regexpi(response, '^.*<soap:Body>(?<content>.*)</soap:Body>.*$', 'names');
+    matches = regexpi(response, '<soap:Body>(?<content>.*)</soap:Body>', 'names');
   
     s = fetchXML(matches.content);
     
