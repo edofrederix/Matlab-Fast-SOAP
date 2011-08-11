@@ -38,11 +38,21 @@ function response = callSoapService(url, action, message)
     import java.net.*;
     import com.mathworks.mlwidgets.io.InterruptibleStreamCopier;
     
+    % Prep message
     m = java.lang.String(message).getBytes('UTF8');
     
+    % Proxy
+    com.mathworks.mlwidgets.html.HTMLPrefs.setProxySettings
+    mwtcp = com.mathworks.net.transport.MWTransportClientPropertiesFactory.create();
+    proxy = mwtcp.getProxy();   
+
     % Connection
-    url = URL(url);
-    c = url.openConnection;
+    url = URL(url); 
+    if isempty(proxy)
+        c = url.openConnection();
+    else
+        c = url.openConnection(proxy);
+    end
     c.setRequestProperty('Content-Type','text/xml; charset=utf-8');
     c.setRequestProperty('SOAPAction',action);
     c.setRequestMethod('POST');
@@ -62,7 +72,7 @@ function response = callSoapService(url, action, message)
 
 
     try
-        % Read the response.
+        % Receive
         inputStream = c.getInputStream;
         byteArrayOutputStream = java.io.ByteArrayOutputStream;
         isc = InterruptibleStreamCopier.getInterruptibleStreamCopier;
