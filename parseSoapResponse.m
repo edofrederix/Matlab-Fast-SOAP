@@ -33,9 +33,24 @@
 
 function s = parseSoapResponse(response)
 
-    matches = regexpi(response, '<soap:Body[^>]*>.*<(?<method>[a-z0-9:]*)response[^>]*>(?<content>.*)</(?:\1)response>.*</soap:Body>', 'names');
-  
-    s = fetchXML(matches.content);
+    body = regexpi(response, '<soap:Body[^>]*>(?<content>.*)</soap:Body>', 'names');
+    
+    if ~isempty(body)
+        
+        resp = regexpi(body.content, '<(?<method>[a-z0-9:]*)response[^>]*>(?<content>.*)</(?:\1)response>', 'names');
+        fault = regexpi(body.content, '<soap:Fault[^>]*>(?<content>.*)</soap:Fault>', 'names');
+        
+        s = struct();
+        if ~isempty(resp)
+            s = fetchXML(resp.content);
+        end
+        
+        if ~isempty(fault)
+            s = mergeStruct(s, fetchXML(fault.content));
+        end
+    else
+        error('No valid SOAP message received (could not find soap:Body element).');
+    end
     
 end
 
@@ -55,7 +70,7 @@ function s = fetchXML(xml)
         else
             % Check footprint
             fp1 = footprint(match{1});
-            fp2 = footprint(match{1});
+            fp2 = footprint(match{2});
             if strcmp(fp1, fp2)
                 s.(matches(1).tag) = swapStruct(regexpi(xml, fp1, 'names'));
                 
