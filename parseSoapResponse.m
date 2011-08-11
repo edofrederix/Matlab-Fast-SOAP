@@ -153,6 +153,35 @@ function obj = mergeAll(obj1, obj2)
             obj = {obj1; obj2};
         end
     end
+    
+    % Combine structs of same size in cell
+    if iscell(obj)
+        info = [];
+        objNew = {};
+        for i = 1:numel(obj)
+            if isstruct(obj{i})
+                info = vertcat(info, [i numel(obj{i})]); %#ok<*AGROW>
+            else
+                objNew{end+1} = obj{i};
+            end
+        end
+        
+        if size(info, 1) > 1
+        	sizes = unique(info(:,2));
+            for i = 1:numel(sizes)
+                ind = info(info(:,2)==i);
+                if numel(ind) > 1
+                    objNew{end+1} = obj{ind(1)};
+                    for j=2:numel(ind)
+                        objNew{end} = mergeAll(objNew{end}, obj{ind(j)});
+                    end
+                else
+                    objNew{end+1} = obj{ind};
+                end
+            end
+            obj = objNew;
+        end
+    end
 end
 
 %==========================================================================
