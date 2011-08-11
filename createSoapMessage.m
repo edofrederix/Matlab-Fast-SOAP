@@ -47,19 +47,19 @@ function m = createSoapMessage(tns, methodname, data, style)
     
     % Start the envelope
     m = '<?xml version="1.0" encoding="utf-8"?>';
-    m = merge(m, '<soap:Envelope xmlSteps:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlSteps:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlSteps:xs="http://www.w3.org/2001/XMLSchema" xmlSteps:xsi="http://www.w3.org/2001/XMLSchema-instance"');
+    m = merge(m, '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"');
     switch style
         case 'document'
             m = merge(m, '>');
         case 'rpc'
-            m = merge(m, sprintf(' xmlSteps:n="%s">', tns));
+            m = merge(m, sprintf(' xmlns:n="%s">', tns));
     end
     m = merge(m, '<soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">');
     switch style
         case 'document'
-            m = merge(m, sprintf('%s<%s xmlSteps="%s">', methodname, tns));
+            m = merge(m, sprintf('<%s xmlns="%s">', methodname, tns));
         case 'rpc'
-            m = merge(m, sprintf('%s<n:%s>', methodname));
+            m = merge(m, sprintf('<n:%s>', methodname));
     end
     
     % Add body
@@ -68,9 +68,9 @@ function m = createSoapMessage(tns, methodname, data, style)
     % End the envelope
     switch style
         case 'document'
-            m = merge(m, sprintf('</%s>', m, methodname));
+            m = merge(m, sprintf('</%s>', methodname));
         case 'rpc'
-            m = merge(m, sprintf('%s</n:%s>', methodname));
+            m = merge(m, sprintf('</n:%s>', methodname));
     end
     m = merge(m, '</soap:Body></soap:Envelope>');
 end
