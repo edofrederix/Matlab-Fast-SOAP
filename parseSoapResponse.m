@@ -160,7 +160,7 @@ function obj = mergeAll(obj1, obj2)
         objNew = {};
         for i = 1:numel(obj)
             if isstruct(obj{i})
-                info = vertcat(info, [i numel(obj{i})]); %#ok<*AGROW>
+                info = vertcat(info, [i numel(obj{i})]);
             else
                 objNew{end+1} = obj{i};
             end
