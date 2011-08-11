@@ -82,7 +82,7 @@ function s = fetchXML(xml)
 
             else
                 for i=1:numel(matches)
-                    s.(matches(i).tag) = fetchXML(matches(i).val);
+                    s = mergeStruct(s, struct(matches(i).tag, fetchXML(matches(i).val)));
                 end
             end
         end       
