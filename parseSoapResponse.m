@@ -142,7 +142,7 @@ function obj = mergeAll(obj1, obj2)
                 end
                 
             otherwise
-                error('Cannot merge');
+                obj = {obj1; obj2};
         end
     else
         if strcmp(c1, 'cell')
