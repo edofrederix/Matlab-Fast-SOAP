@@ -33,7 +33,7 @@
 
 function s = parseSoapResponse(response)
 
-    matches = regexpi(response, '<soap:Body[^>]*>.*<(?<method>[a-z0-9]*)response[^>]*>(?<content>.*)</(?:[a-z0-9]*)response>.*</soap:Body>', 'names');
+    matches = regexpi(response, '<soap:Body[^>]*>.*<(?<method>[a-z0-9:]*)response[^>]*>(?<content>.*)</(?:\1)response>.*</soap:Body>', 'names');
   
     s = fetchXML(matches.content);
     
@@ -42,7 +42,7 @@ end
 %==========================================================================
 function s = fetchXML(xml)
 
-    regex = '<(?<tag>[a-z0-9]*)[^>]*>(?<val>.*?)<[/]\1>';
+    regex = '<(?<tag>[a-z0-9:]*)[^>]*>(?<val>.*?)</\1>';
     [match matches] = regexpi(xml, regex, 'match', 'names');
     
     if isempty(matches)
@@ -77,7 +77,7 @@ end
 
 %==========================================================================
 function fp = footprint(xml)
-    tok = regexpi(xml, '<([a-z0-9]*)[^>]*>(.*?)<[/]\1>', 'tokens');
+    tok = regexpi(xml, '<([a-z0-9:]*)[^>]*>(.*?)<[/]\1>', 'tokens');
     
     if isempty(tok)
         fp = 'value';
