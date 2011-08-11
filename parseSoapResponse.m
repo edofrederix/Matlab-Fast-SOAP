@@ -46,7 +46,7 @@ function s = parseSoapResponse(response)
         end
         
         if ~isempty(fault)
-            s = mergeStruct(s, fetchXML(fault.content));
+            s = mergeAll(s, fetchXML(fault.content));
         end
     else
         error('No valid SOAP message received (could not find soap:Body element).');
@@ -77,12 +77,12 @@ function s = fetchXML(xml)
                 % Check for remainder
                 xml = regexprep(xml, fp1, '', 'ignorecase');
                 if ~isempty(xml)
-                    s = mergeStruct(s, fetchXML(xml));
+                    s = mergeAll(s, fetchXML(xml));
                 end 
 
             else
                 for i=1:numel(matches)
-                    s = mergeStruct(s, struct(matches(i).tag, fetchXML(matches(i).val)));
+                    s = mergeAll(s, struct(matches(i).tag, fetchXML(matches(i).val)));
                 end
             end
         end       
@@ -109,48 +109,48 @@ function fp = footprint(xml)
 end
 
 %==========================================================================
-function s1 = mergeStruct(s1, s2)
-    if numel(s1) ~= numel(s2)
-        error('Arguments are not consistent in structure field number.');
-    end
-    
-    % Update s1 with s2
-    keys = fieldnames(s2);
-    for i = 1:numel(keys)
-        key = keys{i};
-        for j = 1:numel(s1)
-            if isfield(s1, key)
-                s1(j).(key) = catAll(s1(j).(key), s2(j).(key));
-            else
-                s1(j).(key) = s2(j).(key);
-            end
-        end
-    end
-end
-
-%==========================================================================
-function val = catAll(obj1, obj2)
+function obj = mergeAll(obj1, obj2)
     c1 = class(obj1); c2 = class(obj2);
     if strcmp(c1, c2)
         switch c1
             case 'cell'
-                val = vertcat(obj1, obj2);
+                obj = vertcat(obj1(:), obj2(:));
+                
             case 'char'
-                val = char({obj1; obj2});
+                obj = char({obj1; obj2});
+                
             case 'double'
-                val = [obj1; obj2];
+                obj = [obj1; obj2];
+                
             case 'struct'
-                val = mergeStruct(obj1, obj2);
+                if numel(obj1) ~= numel(obj2)
+                    obj = {obj1; obj2};
+                else
+                    % Merge obj2 into obj1;
+                    keys = fieldnames(obj2);
+                    for i = 1:numel(keys)
+                        key = keys{i};
+                        for j = 1:numel(obj1)
+                            if isfield(obj1, key)
+                                obj1(j).(key) = mergeAll(obj1(j).(key), obj2(j).(key));
+                            else
+                                obj1(j).(key) = obj2(j).(key);
+                            end
+                        end
+                    end
+                    obj = obj1;
+                end
+                
             otherwise
                 error('Cannot merge');
         end
     else
         if strcmp(c1, 'cell')
-            val = vertcat(obj1(:), {obj2});
+            obj = vertcat(obj1(:), {obj2});
         elseif strcmp(c2, 'cell')
-            val = vertcat({obj1}, obj2(:));
+            obj = vertcat({obj1}, obj2(:));
         else
-            val = {obj1, obj2};
+            obj = {obj1; obj2};
         end
     end
 end
