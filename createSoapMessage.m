@@ -147,7 +147,7 @@ function xml = merge(varargin)
     for i=1:optargin
         s = varargin{i};
         if size(s,1) > 1
-            xml = [xml reshape(varargin{i}', 1, numel(varargin{i}))];
+            xml = [xml reshape(transpose(varargin{i}), 1, numel(varargin{i}))];
         else
             xml = [xml s];
         end
