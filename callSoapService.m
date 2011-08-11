@@ -70,7 +70,6 @@ function response = callSoapService(url, action, message)
         
     end
 
-
     try
         % Receive
         inputStream = c.getInputStream;
@@ -85,5 +84,6 @@ function response = callSoapService(url, action, message)
         
     end
 
+    % Make response readable
     response = char(byteArrayOutputStream.toString('UTF-8'));
 end
