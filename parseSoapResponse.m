@@ -119,7 +119,38 @@ function s1 = mergeStruct(s1, s2)
     for i = 1:numel(keys)
         key = keys{i};
         for j = 1:numel(s1)
-            s1(j).(key) = s2(j).(key);
+            if isfield(s1, key)
+                s1(j).(key) = catAll(s1(j).(key), s2(j).(key));
+            else
+                s1(j).(key) = s2(j).(key);
+            end
+        end
+    end
+end
+
+%==========================================================================
+function val = catAll(obj1, obj2)
+    c1 = class(obj1); c2 = class(obj2);
+    if strcmp(c1, c2)
+        switch c1
+            case 'cell'
+                val = vertcat(obj1, obj2);
+            case 'char'
+                val = char({obj1; obj2});
+            case 'double'
+                val = [obj1; obj2];
+            case 'struct'
+                val = mergeStruct(obj1, obj2);
+            otherwise
+                error('Cannot merge');
+        end
+    else
+        if strcmp(c1, 'cell')
+            val = vertcat(obj1(:), {obj2});
+        elseif strcmp(c2, 'cell')
+            val = vertcat({obj1}, obj2(:));
+        else
+            val = {obj1, obj2};
         end
     end
 end
