@@ -120,11 +120,11 @@ function s2 = swapStruct(s1)
     
     s2 = struct();
     for i = 1:numel(keys)
+        c = char(cl(i,:));
         if strcmp(str2double(cl{1,1}), 'NaN')
-            s2.(keys{i}) = cl(i,:);
+            s2.(keys{i}) = c;
         else
             % Assuming numbers
-            c = char(cl(i,:));
             s2.(keys{i}) = sscanf(c', '%f');
         end
     end
