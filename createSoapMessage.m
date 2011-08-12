@@ -116,7 +116,12 @@ function xml = createXML(data)
 
             case 'cell'
                 for i=1:numel(val)
-                    xmlStep = merge(xmlStep, wrapXML(wrap, '', createXML(struct('val', val{i}))));
+                    if isstruct(val{i})
+                        valStep = val{i};
+                    else
+                        valStep = struct('val', val{i});
+                    end
+                    xmlStep = merge(xmlStep, wrapXML(wrap, '', createXML(valStep)));
                 end
                 xml = merge(xml, wrapXML(name, type, xmlStep));
         end
