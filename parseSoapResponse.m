@@ -72,7 +72,12 @@ function s = fetchXML(xml)
             fp1 = footprint(match{1});
             fp2 = footprint(match{2});
             if strcmp(fp1, fp2)
-                s.(matches(1).tag) = swapStruct(regexpi(xml, fp1, 'names'));
+                sfp = swapStruct(regexpi(xml, fp1, 'names'));
+                if isfield(sfp, matches(1).tag)
+                    s = mergeAll(s, sfp);
+                else
+                    s.(matches(1).tag) = sfp;
+                end
                 
                 % Check for remainder
                 xml = regexprep(xml, fp1, '', 'ignorecase');
