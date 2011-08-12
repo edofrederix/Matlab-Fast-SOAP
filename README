@@ -17,9 +17,10 @@ efficient alternatives.
 
 The reason for replacement is straightforward: speed. The native SOAP
 functions make use of a Document Object Model (DOM) approach. This is very
-slow for a large set of elements, as process time scales exponentially with
-the number of elements in the DOM. By using simple string operations, creating
-the SOAP message, as well as parsing the SOAP message, will take less time.
+slow for a large set of elements, as process time scales somewhat
+exponentially with the number of elements in the DOM. By using simple string
+operations, creating the SOAP message, as well as parsing the SOAP message,
+will take less time.
 
 This modification and the gain in speed of course comes with a payoff: the
 flexibility of the DOM approach is completely lost. Therefore, these fast SOAP
@@ -40,6 +41,20 @@ All code in this package is written by:
 This package is shipped under the terms of the GNU General Public License
 version 3 or any later version. A copy of the GNU GPL v3 resides in this
 package. A more formal statement can be found at the bottom of this file.
+
+---- Documentation -----------------------------------------------------------
+
+This library comes with three function files: createSoapMessage.m,
+callSoapService.m and parseSoapResponse.m. Compared to the original versions
+of these files, all three functions take differently structured input
+variables, and produce differently structured results. This turned out to be a
+requirement for speeding up the process.
+
+---- createSoapMessage ----
+  
+---- callSoapService ----
+
+---- parseSoapResponse ----
 
 
 ---- License -----------------------------------------------------------------
