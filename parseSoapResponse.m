@@ -204,7 +204,7 @@ function s2 = swapStruct(s1)
             s2.(keys{i}) = c;
         else
             % Assuming numbers
-            s2.(keys{i}) = sscanf(c', '%f');
+            s2.(keys{i}) = sscanf(c', strcat('%', num2str(size(c,2)), 'f'));
         end
     end
 end
